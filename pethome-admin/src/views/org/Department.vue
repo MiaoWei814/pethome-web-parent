@@ -4,7 +4,7 @@
 		<el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
 			<el-form :inline="true" :model="filters">
 				<el-form-item>
-					<el-input v-model="filters.name" placeholder="姓名"></el-input>
+					<el-input v-model="filters.name" placeholder="部门名称"></el-input>
 				</el-form-item>
 				<el-form-item>
 					<el-button type="primary" v-on:click="getUsers">查询</el-button>
@@ -180,7 +180,6 @@
         //显示加载框
 				this.listLoading = true;
 				//NProgress.start();
-        console.log(para);
 				this.$http.get("/department/list",{params: para}).then((res) => {
 					this.total = res.data.data.total;
           this.users = res.data.data.list;
