@@ -47,63 +47,61 @@
 		<!--工具条-->
 		<el-col :span="24" class="toolbar">
 			<el-button type="danger" @click="batchRemove" :disabled="this.sels.length===0">批量删除</el-button>
-			<el-pagination layout="prev, pager, next" @current-change="handleCurrentChange" :page-size="10" :total="total" style="float:right;">
+			<el-pagination layout="prev, pager, next" @current-change="handleCurrentChange" :page-size="pageSize" :total="total" style="float:right;">
 			</el-pagination>
 		</el-col>
 
-		<!--编辑界面-->
-		<el-dialog title="编辑" v-model="editFormVisible" :close-on-click-modal="false">
+		<!--编辑和新增界面-->
+		<el-dialog :title="title" :visible.sync="editFormVisible" :close-on-click-modal="false">
 			<el-form :model="editForm" label-width="80px" :rules="editFormRules" ref="editForm">
-				<el-form-item label="姓名" prop="name">
-					<el-input :visible.sync="editForm.name" auto-complete="off"></el-input>
+				<el-form-item label="部门编号" prop="departmentNumber">
+					<el-input v-model="editForm.departmentNumber" auto-complete="off"></el-input>
 				</el-form-item>
-				<el-form-item label="性别">
-					<el-radio-group v-model="editForm.sex">
-						<el-radio class="radio" :label="1">男</el-radio>
-						<el-radio class="radio" :label="0">女</el-radio>
+        <el-form-item label="部门名称" prop="name">
+					<el-input v-model="editForm.name" auto-complete="off"></el-input>
+				</el-form-item>
+				<el-form-item label="状态" prop="resource">
+					<el-radio-group v-model="editForm.resource">
+						<el-radio class="radio" :label="0">启用</el-radio>
+						<el-radio class="radio" :label="-1">禁用</el-radio>
 					</el-radio-group>
 				</el-form-item>
-				<el-form-item label="年龄">
-					<el-input-number v-model="editForm.age" :min="0" :max="200"></el-input-number>
-				</el-form-item>
-				<el-form-item label="生日">
-					<el-date-picker type="date" placeholder="选择日期" v-model="editForm.birth"></el-date-picker>
-				</el-form-item>
-				<el-form-item label="地址">
-					<el-input type="textarea" v-model="editForm.addr"></el-input>
-				</el-form-item>
+        <!-- 选择框-->
+        <el-form-item label="管理员" prop="manager">
+          <el-select v-model="editForm.manage" clearable placeholder="请选择">
+            <!--
+               key:唯一的标志
+               label:展示的数据
+               value:传到后台的数据
+               -->
+            <el-option
+                v-for="item in manages"
+                :key="item.id"
+                :label="item.username"
+                :value="item.id">
+              <span style="float: left">{{ item.username }}</span>
+              <span style="float: right; color: #8492a6; font-size: 13px">{{ item.email }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+
+        <!--级联选择-->
+        <el-form-item label="上级部门" prop="parent">
+          <el-cascader v-model="editForm.parent"
+              :options="options"
+              :props="{
+                checkStrictly: true,
+                label:'name',
+                value:'id',
+              }"
+              clearable>
+          </el-cascader>
+        </el-form-item>
+
 			</el-form>
 			<div slot="footer" class="dialog-footer">
 				<el-button @click.native="editFormVisible = false">取消</el-button>
 				<el-button type="primary" @click.native="editSubmit" :loading="editLoading">提交</el-button>
-			</div>
-		</el-dialog>
-
-		<!--新增界面-->
-		<el-dialog title="新增" v-model="addFormVisible" :close-on-click-modal="false">
-			<el-form :model="addForm" label-width="80px" :rules="addFormRules" ref="addForm">
-				<el-form-item label="姓名" prop="name">
-					<el-input :visible.sync="addForm.name" auto-complete="off"></el-input>
-				</el-form-item>
-				<el-form-item label="性别">
-					<el-radio-group v-model="addForm.sex">
-						<el-radio class="radio" :label="1">男</el-radio>
-						<el-radio class="radio" :label="0">女</el-radio>
-					</el-radio-group>
-				</el-form-item>
-				<el-form-item label="年龄">
-					<el-input-number v-model="addForm.age" :min="0" :max="200"></el-input-number>
-				</el-form-item>
-				<el-form-item label="生日">
-					<el-date-picker type="date" placeholder="选择日期" v-model="addForm.birth"></el-date-picker>
-				</el-form-item>
-				<el-form-item label="地址">
-					<el-input type="textarea" v-model="addForm.addr"></el-input>
-				</el-form-item>
-			</el-form>
-			<div slot="footer" class="dialog-footer">
-				<el-button @click.native="addFormVisible = false">取消</el-button>
-				<el-button type="primary" @click.native="addSubmit" :loading="addLoading">提交</el-button>
 			</div>
 		</el-dialog>
 	</section>
@@ -121,52 +119,44 @@
 				filters: {
 					name: ''
 				},
+        title: '',
 				users: [],
 				total: 0,
         currentPage: 1,
+        pageSize: 10,
 				listLoading: false,
 				sels: [],//列表选中列
 
 				editFormVisible: false,//编辑界面是否显示
 				editLoading: false,
 				editFormRules: {
-					name: [
-						{ required: true, message: '请输入姓名', trigger: 'blur' }
-					]
+          departmentNumber: [
+						{ required: true, message: '请输入部门编号', trigger: 'blur' }
+					],
+          name: [
+						{ required: true, message: '请输入部门名称', trigger: 'blur' }
+					],
+          resource: [
+						{ required: true, message: '请选择启用的状态', trigger: 'change' }
+					],
+
 				},
 				//编辑界面数据
 				editForm: {
-					id: 0,
-					name: '',
-					sex: -1,
-					age: 0,
-					birth: '',
-					addr: ''
+					id: null,
+          departmentNumber: '',
+          name: '',
+          resource: '',
+          manage:null,
+          parent:[]
 				},
-
-				addFormVisible: false,//新增界面是否显示
-				addLoading: false,
-				addFormRules: {
-					name: [
-						{ required: true, message: '请输入姓名', trigger: 'blur' }
-					]
-				},
-				//新增界面数据
-				addForm: {
-					name: '',
-					sex: -1,
-					age: 0,
-					birth: '',
-					addr: ''
-				}
-
+        //管理员列表
+        manages: [],
+        //上级部门
+        options: [],
 			}
 		},
 		methods: {
-			//性别显示转换
-			formatSex: function (row, column) {
-				return row.sex == 1 ? '男' : row.sex == 0 ? '女' : '未知';
-			},
 			handleCurrentChange(val) {
 				this.currentPage = val;
 				this.getUsers();
@@ -189,20 +179,31 @@
 			},
 			//删除
 			handleDel: function (index, row) {
+        //row是这一行的数据
 				this.$confirm('确认删除该记录吗?', '提示', {
 					type: 'warning'
 				}).then(() => {
 					this.listLoading = true;
 					//NProgress.start();
-					let para = { id: row.id };
-					removeUser(para).then((res) => {
+					let para = { ids: row.id };
+					this.$http.post("/department/del",para).then((res) => {
+            //关闭忙等框
 						this.listLoading = false;
-						//NProgress.done();
-						this.$message({
-							message: '删除成功',
-							type: 'success'
-						});
-						this.getUsers();
+						if (res.data.code===200) {
+              this.$message({
+                message: '删除成功',
+                type: 'success'
+              });
+              //重新回到第一页再请求获取数据
+              this.currentPage=1;
+              //重新获取数据
+              this.getUsers();
+            }else{
+              this.$message({
+                message: res.data.msg,
+                type: 'error'
+              });
+            }
 					});
 				}).catch(() => {
 
@@ -210,30 +211,54 @@
 			},
 			//显示编辑界面
 			handleEdit: function (index, row) {
+        this.title='编辑';
 				this.editFormVisible = true;
-				this.editForm = Object.assign({}, row);
+				//分配数据
+        this.editForm.id=row.id
+        this.editForm.departmentNumber=row.sn
+        this.editForm.name=row.name
+        this.editForm.resource=row.state
+        this.editForm.manage=row.managerId
+        this.editForm.parent=row.parentId
+
+
+				// this.editForm = Object.assign({}, row); //回显数据!
+        //获取管理员
+        this.queryManager();
+        //获取上级部门
+        this.queryParentDepartment();
 			},
 			//显示新增界面
 			handleAdd: function () {
-				this.addFormVisible = true;
-				this.addForm = {
-					name: '',
-					sex: -1,
-					age: 0,
-					birth: '',
-					addr: ''
+        this.title='新增';
+				this.editFormVisible = true;
+				this.editForm = {
+          id: null,
+          departmentNumber: '',
+          name: '',
+          resource: '',
+          manage:null,
+          parent:[]
 				};
+        //获取管理员
+        this.queryManager();
+        //获取上级部门
+        this.queryParentDepartment();
 			},
-			//编辑
+			//编辑和新增提交页面
 			editSubmit: function () {
 				this.$refs.editForm.validate((valid) => {
 					if (valid) {
 						this.$confirm('确认提交吗？', '提示', {}).then(() => {
 							this.editLoading = true;
-							//NProgress.start();
+							//克隆数据
 							let para = Object.assign({}, this.editForm);
-							para.birth = (!para.birth || para.birth == '') ? '' : util.formatDate.format(new Date(para.birth), 'yyyy-MM-dd');
-							editUser(para).then((res) => {
+              //数组切分转为字符串!
+              if (para.parent) {
+                para.parent=para.parent.join(",");
+              }
+
+							this.$http.put("/department/save",para).then((res) => {
 								this.editLoading = false;
 								//NProgress.done();
 								this.$message({
@@ -248,55 +273,70 @@
 					}
 				});
 			},
-			//新增
-			addSubmit: function () {
-				this.$refs.addForm.validate((valid) => {
-					if (valid) {
-						this.$confirm('确认提交吗？', '提示', {}).then(() => {
-							this.addLoading = true;
-							//NProgress.start();
-							let para = Object.assign({}, this.addForm);
-							para.birth = (!para.birth || para.birth == '') ? '' : util.formatDate.format(new Date(para.birth), 'yyyy-MM-dd');
-							addUser(para).then((res) => {
-								this.addLoading = false;
-								//NProgress.done();
-								this.$message({
-									message: '提交成功',
-									type: 'success'
-								});
-								this.$refs['addForm'].resetFields();
-								this.addFormVisible = false;
-								this.getUsers();
-							});
-						});
-					}
-				});
-			},
+      //获取选中的然后放进数组中
 			selsChange: function (sels) {
 				this.sels = sels;
 			},
 			//批量删除
 			batchRemove: function () {
+        //这里sels是一个数组,这里使用map进行类似于lambda表达式一样取出其中的id进行映射成数组然后转换为String
 				var ids = this.sels.map(item => item.id).toString();
+        console.log(ids);
 				this.$confirm('确认删除选中记录吗？', '提示', {
 					type: 'warning'
 				}).then(() => {
 					this.listLoading = true;
 					//NProgress.start();
 					let para = { ids: ids };
-					batchRemoveUser(para).then((res) => {
+					this.$http.post("/department/del",para).then((res) => {
+            //关闭那个忙等框
 						this.listLoading = false;
 						//NProgress.done();
-						this.$message({
-							message: '删除成功',
-							type: 'success'
-						});
-						this.getUsers();
+            if (res.data.code === 200) {
+              this.$message({
+                message: '删除成功',
+                type: 'success'
+              });
+              //重新回到第一页
+              this.currentPage=1;
+              //重新获取数据
+              this.getUsers();
+            }else{
+              this.$message({
+                message: res.data.msg,
+                type: 'error'
+              });
+            }
 					});
-				}).catch(() => {
-
+				}).catch((result) => {
+          this.$message({
+            message: '系统繁忙',
+            type: 'error'
+          });
 				});
-			}
+			},
+      //获取管理员
+      queryManager:function () {
+        this.$http.get("/department/queryManager")
+          .then(result => {
+            //发送成功之后
+            this.manages = result.data.data;
+          }).catch(result => {
+            alert("获取管理员失败!请稍后再试!")
+        })
+      },
+      //获取上级部门
+      queryParentDepartment:function () {
+        this.$http.get("/department/parentDepartmentList")
+            .then(result => {
+              this.options = result.data.data;
+            }).catch(result => {
+              this.$message({
+                message: '当前系统繁忙,请稍后再试',
+                type: 'error'
+              });
+        })
+      }
 		},
 		mounted() {
 			this.getUsers();
