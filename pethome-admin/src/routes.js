@@ -10,6 +10,7 @@ import Page5 from './views/nav2/Page5.vue'
 import Page6 from './views/nav3/Page6.vue'
 import echarts from './views/charts/echarts.vue'
 import Department from './views/org/Department'
+import System from './views/org/system'
 
 let routes = [
     {
@@ -52,7 +53,7 @@ let routes = [
         iconCls: 'fa fa-id-card-o',
         children: [
             { path: '/log', component: Department, name: '日志管理' },
-            { path: '/d', component: Department, name: '数据字典' }
+            { path: '/d', component: System, name: '数据字典' }
         ]
     },
     {
