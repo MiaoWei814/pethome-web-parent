@@ -9,8 +9,8 @@
     </el-form-item>
     <el-checkbox v-model="checked" checked class="remember">记住密码</el-checkbox>
     <el-form-item style="width:100%;">
-      <el-button type="primary" style="width:100%;" @click.native.prevent="handleSubmit2" :loading="logining">登录</el-button>
-      <!--<el-button @click.native.prevent="handleReset2">重置</el-button>-->
+      <el-button type="primary" style="width:45%;" @click.native.prevent="handleSubmit2" :loading="logining">登录</el-button>
+      <el-button type="primary" style="width:45%;" @click.native.prevent="handleSettledIn">店铺入驻</el-button>
     </el-form-item>
   </el-form>
 </template>
@@ -19,6 +19,7 @@
   import { requestLogin } from '../api/api';
   //import NProgress from 'nprogress'
   export default {
+    //变量
     data() {
       return {
         logining: false,
@@ -39,10 +40,18 @@
         checked: true
       };
     },
+    //方法
     methods: {
+      //表单重置
       handleReset2() {
         this.$refs.ruleForm2.resetFields();
       },
+      //店铺入驻
+      handleSettledIn(){
+        //点击跳转路由
+        this.$router.push({ path: '/shopRegister' });
+      },
+      //登录
       handleSubmit2(ev) {
         var _this = this;
         this.$refs.ruleForm2.validate((valid) => {

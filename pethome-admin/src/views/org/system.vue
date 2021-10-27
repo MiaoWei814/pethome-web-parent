@@ -305,6 +305,7 @@
       },
       //编辑和新增提交页面
       editSubmit: function () {
+        //这里editForm就是上面定义的表单别名
         this.$refs.editForm.validate((valid) => {
           if (valid) {
             this.$confirm('确认提交吗？', '提示', {}).then(() => {

@@ -11,8 +11,15 @@ import Page6 from './views/nav3/Page6.vue'
 import echarts from './views/charts/echarts.vue'
 import Department from './views/org/Department'
 import System from './views/org/system'
+import Shop from './views/org/Shop'
 
 let routes = [
+    {
+        path: '/shopRegister',
+        component: Shop,
+        name: '门店入驻',
+        hidden: true //不显示在页面
+    },
     {
         path: '/login',
         component: Login,
