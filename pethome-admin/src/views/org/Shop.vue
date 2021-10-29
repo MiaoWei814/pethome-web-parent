@@ -121,8 +121,8 @@
 <script>
 export default {
   data() {
+    //两次密码校验
     var validatePass2 = (rule, value, callback) => {
-      console.log(value); //确认密码
       if (value === '') {
         callback(new Error('请再次输入密码'))
       } else if (value !== this.shop.password) {
