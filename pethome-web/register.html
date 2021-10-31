@@ -74,11 +74,11 @@
                         <form method="post">
                             <div class="user-phone">
                                 <label for="phone"><i class="am-icon-mobile-phone am-icon-md"></i></label>
-                                <input type="tel" name="" v-model="phone" id="phone" placeholder="请输入手机号">
+                                <input type="tel" name="" v-model="phoneUserForm.phone" id="phone" placeholder="请输入手机号">
                             </div>
                             <div class="verification">
                                 <label for="code"><i class="am-icon-code-fork"></i></label>
-                                <input type="tel" name="" id="code" placeholder="请输入验证码">
+                                <input type="tel" name="" v-model="phoneUserForm.MobileCode" id="code" placeholder="请输入验证码">
                                 <!--                                <a class="btn" href="javascript:void(0);" onclick="sendMobileCode();"-->
                                 <!--                                   id="sendMobileCode">-->
                                 <!--                                    <span id="dyMobileButton" @click="getMobileCode">获取</span></a>-->
@@ -86,11 +86,11 @@
                             </div>
                             <div class="user-pass">
                                 <label for="password"><i class="am-icon-lock"></i></label>
-                                <input type="password" name="" id="password" placeholder="设置密码">
+                                <input type="password" name="" v-model="phoneUserForm.password" id="password" placeholder="设置密码">
                             </div>
                             <div class="user-pass">
                                 <label for="passwordRepeat"><i class="am-icon-lock"></i></label>
-                                <input type="password" name="" id="passwordRepeat" placeholder="确认密码">
+                                <input type="password" name="" v-model="phoneUserForm.confirmPassword" id="passwordRepeat" placeholder="确认密码">
                             </div>
                         </form>
                         <div class="login-links">
@@ -99,7 +99,7 @@
                             </label>
                         </div>
                         <div class="am-cf">
-                            <input type="submit" name="" value="注册" class="am-btn am-btn-primary am-btn-sm am-fl">
+                            <input type="submit" name=""  @click="phoneRegister" value="注册" class="am-btn am-btn-primary am-btn-sm am-fl">
                         </div>
 
                         <hr>
@@ -148,13 +148,17 @@
     new Vue({
         el: "#registerPhone",
         data: {
-            //电话号码
-            phone: ""
+            phoneUserForm:{
+                phone:null,
+                mobileCode:null,
+                password: null,
+                confirmPassword: null
+            }
         },
         methods: {
             //点击获取验证码
             getMobileCode() {
-                let phone = this.phone;
+                let phone = this.phoneUserForm.phone;
                 //不能为空
                 if (phone === '') {
                     alert("请先输入手机号!再获取验证码")
@@ -169,9 +173,8 @@
                 //获取按钮，禁用按钮  发送时灰化不能使用，发送成功倒计时60才能使用，如果发送失败立即可以发送
                 let sendBtn = $(event.target);
                 sendBtn.attr("disabled", true);
-                this.$http.post('/user/phoneCode', {"phone": this.phone})
+                this.$http.post('/user/phoneCode', {"phone": phone})
                     .then((res) => {
-                        console.log(res);
                         var ajaxResult = res.data;
                         if (ajaxResult.code===200) {
                             alert("手机验证码已经发送到您的手机，请在3分钟内使用");
@@ -198,6 +201,27 @@
                             alert("发送失败:" + ajaxResult.msg);
                         }
                     });
+            },
+            //手机号点击注册
+            phoneRegister(){
+                let userForm = this.phoneUserForm;
+                if (userForm.phone == null || userForm.MobileCode == null || userForm.password == null || userForm.confirmPassword == null) {
+                    alert("参数项不能为空!");
+                    return false;
+                }
+                //发送请求
+                this.$http.post("/user/phone/register", userForm)
+                    .then(result=>{
+                        if (result.data.success===200) {
+                            // 跳转到登录页面
+                            location.href="login.html";
+                        }else{
+                            alert(result.data.msg)
+                        }
+
+                    }).catch(result=>{
+                        alert("系统异常,请稍后再试!")
+                })
             }
         }
     })

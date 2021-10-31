@@ -24,12 +24,12 @@
       return {
         logining: false,
         ruleForm2: {
-          account: 'admin',
-          checkPass: '123456'
+          account: '',
+          checkPass: ''
         },
         rules2: {
           account: [
-            { required: true, message: '请输入账号', trigger: 'blur' },
+            { required: true, message: '请输入手机号码', trigger: 'blur' },
             //{ validator: validaePass }
           ],
           checkPass: [
@@ -52,25 +52,27 @@
         this.$router.push({ path: '/shopRegister' });
       },
       //登录
-      handleSubmit2(ev) {
-        var _this = this;
+      handleSubmit2() {
         this.$refs.ruleForm2.validate((valid) => {
           if (valid) {
             //_this.$router.replace('/table');
+            //转圈框
             this.logining = true;
             //NProgress.start();
-            var loginParams = { username: this.ruleForm2.account, password: this.ruleForm2.checkPass };
-            requestLogin(loginParams).then(data => {
+            let loginParams = { username: this.ruleForm2.account, password: this.ruleForm2.checkPass ,type: 0};
+            this.$http.post("/shop/login",loginParams).then(result => {
               this.logining = false;
               //NProgress.done();
-              let { msg, code, user } = data;
+              let { msg, code, data } = result.data;
               if (code !== 200) {
                 this.$message({
                   message: msg,
                   type: 'error'
                 });
               } else {
-                sessionStorage.setItem('user', JSON.stringify(user));
+                //存放浏览器中token
+                localStorage.setItem('logininfo', JSON.stringify(data.loginfo));
+                localStorage.setItem('token',data.token );
                 /*修改登录成功之后跳转到首页*/
                 this.$router.push({ path: '/echarts' });
               }
