@@ -173,7 +173,8 @@
                 //获取按钮，禁用按钮  发送时灰化不能使用，发送成功倒计时60才能使用，如果发送失败立即可以发送
                 let sendBtn = $(event.target);
                 sendBtn.attr("disabled", true);
-                this.$http.post('/user/phoneCode', {"phone": phone})
+                //type:为1表示这是注册的业务
+                this.$http.post('/user/phoneCode', {"phone": phone,"type":1})
                     .then((res) => {
                         var ajaxResult = res.data;
                         if (ajaxResult.code===200) {

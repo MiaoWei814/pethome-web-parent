@@ -147,8 +147,9 @@
                     //2.获取按钮，禁用按钮  发送时灰化不能使用，发送成功倒计时60才能使用，如果发送失败立即可以发送
                     var sendBtn = $(event.target);
                     sendBtn.attr("disabled",true);
+					//type:2 表示这是一个绑定的业务
                     this.$http.post('/user/phoneCode',
-                        {"phone":this.phoneUserForm.phone}).then((res) => {
+                        {"phone":this.phoneUserForm.phone,"type":2}).then((res) => {
                         let ajaxResult = res.data;
                         if(ajaxResult.code===200){
                             alert("手机验证码已经发送到您的手机，请在3分钟内使用");
