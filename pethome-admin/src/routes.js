@@ -12,6 +12,8 @@ import echarts from './views/charts/echarts.vue'
 import Department from './views/org/Department'
 import System from './views/org/system'
 import Shop from './views/org/Shop'
+import SearchMasterMsgPending from './views/pet/SearchMasterMsgPending';
+import SearchMasterMsgProcessed from './views/pet/SearchMasterMsgProcessed';
 
 let routes = [
     {
@@ -39,7 +41,7 @@ let routes = [
         name: '首页',
         iconCls: 'fa fa-bar-chart',
         children: [
-            { path: '/echarts', component: echarts, name: '首页' }
+            {path: '/echarts', component: echarts, name: '首页'}
         ]
     },
     {
@@ -48,9 +50,9 @@ let routes = [
         name: '组织机构管理',
         iconCls: 'el-icon-message',//图标样式class
         children: [
-            { path: '/dept', component: Department, name: '部门管理' },
-            { path: '/emp', component: Department, name: '员工管理' },
-            { path: '/shop', component: Department, name: '店铺管理' },
+            {path: '/dept', component: Department, name: '部门管理'},
+            {path: '/emp', component: Department, name: '员工管理'},
+            {path: '/shop', component: Department, name: '店铺管理'},
         ]
     },
     {
@@ -59,8 +61,20 @@ let routes = [
         name: '系统管理',
         iconCls: 'fa fa-id-card-o',
         children: [
-            { path: '/log', component: Department, name: '日志管理' },
-            { path: '/d', component: System, name: '数据字典' }
+            {path: '/log', component: Department, name: '日志管理'},
+            {path: '/d', component: System, name: '数据字典'}
+        ]
+    },
+    {
+        path: '/',
+        component: Home,
+        name: '宠物管理',
+        iconCls: 'fa fa-address-card',
+        children: [
+            {path: '/pending', component: SearchMasterMsgPending, name: '待处理寻主消息'},
+            {path: '/processed', component: SearchMasterMsgProcessed, name: '已处理寻主消息'},
+            {path: '/petType', component: SearchMasterMsgProcessed, name: '宠物类型'},
+            {path: '/pet', component: SearchMasterMsgProcessed, name: '宠物管理'}
         ]
     },
     {
@@ -70,13 +84,13 @@ let routes = [
         iconCls: 'fa fa-address-card',
         leaf: true,//只有一个节点
         children: [
-            { path: '/page6', component: Page6, name: '导航三' }
+            {path: '/page6', component: Page6, name: '导航三'}
         ]
     },
     {
         path: '*',
         hidden: true,
-        redirect: { path: '/404' }
+        redirect: {path: '/404'}
     }
 ];
 
