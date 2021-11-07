@@ -42,7 +42,7 @@ if (url.indexOf("login.html") === -1 &&
     url.indexOf("register.html") === -1 &&
     url.indexOf("callback.html") === -1 &&
     url.indexOf("binder.html") === -1) {
-    let loginInfo = localStorage.getItem("loginInfo");
+    let loginInfo = localStorage.getItem("logininfo");
     if (!loginInfo) {
         location.href = "/login.html"
     }

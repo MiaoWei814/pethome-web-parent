@@ -4,48 +4,51 @@
     <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
       <el-form :inline="true" :model="searchForm">
         <el-form-item>
-          <el-input v-model="searchForm.keyword" placeholder="寻主消息名称"></el-input>
+          <el-input v-model="searchForm.name" placeholder="宠物名称"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" v-on:click="getSearchMasterMsgs">查询</el-button>
+          <el-button type="primary" v-on:click="getPets">查询</el-button>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handle">处理</el-button>
+          <el-button type="primary" @click="handleAdd">新增</el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="onsale">上架</el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="offsale">下架</el-button>
         </el-form-item>
       </el-form>
     </el-col>
 
     <!--列表-->
-    <el-table :data="searchMasterMsgs" highlight-current-row v-loading="listLoading" @selection-change="selsChange"
+    <el-table :data="pets" highlight-current-row v-loading="listLoading" @selection-change="selsChange"
               style="width: 100%;">
       <el-table-column type="selection" width="55">
       </el-table-column>
       <el-table-column type="index" width="60">
       </el-table-column>
-      <!--这里prop的属性就是后端传递过来的参数名-->
       <el-table-column prop="name" label="名称">
       </el-table-column>
-      <el-table-column prop="title" label="标题">
+      <el-table-column prop="saleprice" label="售价">
       </el-table-column>
-      <el-table-column prop="price" label="价格">
+      <el-table-column prop="costprice" label="成本价">
       </el-table-column>
-      <el-table-column prop="age" label="年龄">
-      </el-table-column>
-      <el-table-column prop="gender" label="性别">
+      <el-table-column prop="state" label="状态">
         <template scope="scope">
-          <span v-if="scope.row.gender==0" style="color: red">母</span>
-          <span v-if="scope.row.gender!=0" style="color: green">公</span>
+          <span v-if="scope.row.state==0" style="color: red">下架</span>
+          <span v-if="scope.row.state!=0" style="color: green">上架</span>
         </template>
       </el-table-column>
-      <el-table-column prop="coatColor" label="毛色">
+      <el-table-column prop="offsaletime" label="下架时间">
       </el-table-column>
-      <el-table-column prop="address" label="地址">
+      <el-table-column prop="onsaletime" label="上架时间">
       </el-table-column>
       <el-table-column prop="typeName" label="品种">
       </el-table-column>
-      <el-table-column prop="userName" label="用户">
-      </el-table-column>
       <el-table-column prop="shopName" label="店铺">
+      </el-table-column>
+      <el-table-column prop="username" label="用户">
       </el-table-column>
 
       <el-table-column label="操作" width="200">
@@ -64,8 +67,8 @@
       </el-pagination>
     </el-col>
 
-    <!--处理框架界面-->
-    <el-dialog :title="title" :visible.sync="editFormVisible" :close-on-click-modal="false">
+    <!--编辑 新增 界面-->
+    <el-dialog :title="title" v-model="editFormVisible" :close-on-click-modal="false">
 
       <el-form :model="editForm" label-width="80px" :rules="editFormRules" ref="editForm">
         <el-form-item label="名称" prop="name">
@@ -79,9 +82,10 @@
         </el-form-item>
 
         <el-form-item label="资源" prop="resources">
+          <!--<el-input v-model="editForm.resources" auto-complete="off"></el-input>-->
           <el-upload
               class="upload-demo"
-              action="http://localhost:8080/fastDfs/upload"
+              action="/api/dfs"
               :on-remove="handleRemove"
               :on-success="handleSuccess"
               :file-list="fileList"
@@ -92,11 +96,13 @@
         </el-form-item>
 
         <el-form-item label="简介" prop="intro">
+          <!--<el-input v-model="editForm.detail.intro" auto-complete="off"></el-input>-->
           <quill-editor v-model="editForm.detail.intro" :options="quillOption">
           </quill-editor>
         </el-form-item>
-        <el-form-item label="领养须知" prop="orderNotice">
-          <quill-editor v-model="editForm.detail.adoptnotice" :options="quillOption">
+        <el-form-item label="预约须知" prop="orderNotice">
+          <!--<el-input v-model="editForm.detail.orderNotice" auto-complete="off"></el-input>-->
+          <quill-editor v-model="editForm.detail.orderNotice" :options="quillOption">
           </quill-editor>
         </el-form-item>
 
@@ -111,12 +117,10 @@
 </template>
 
 <script>
-/*引入富文本编辑器 + 它的样式*/
 import {quillEditor} from "vue-quill-editor"; //调用编辑器
 import 'quill/dist/quill.core.css';
 import 'quill/dist/quill.snow.css';
 import 'quill/dist/quill.bubble.css';
-/*引入富文本编辑器集成FastDfsjs控件*/
 import quillConfig from '../../common/js/quill-config.js'
 
 export default {
@@ -129,10 +133,9 @@ export default {
       fileList: [],
       title: '',
       searchForm: {
-        keyword: ''
+        name: ''
       },
-      //数据列表
-      searchMasterMsgs: [],
+      pets: [],
       total: 0,
       page: 1,
       listLoading: false,
@@ -147,17 +150,14 @@ export default {
       },
       //编辑界面数据
       editForm: {
-        id: null,
+        id: 0,
         name: '',
         costprice: 0,
         saleprice: 0,
         resources: '',
-        typeId: 0,
-        shopId: 0,
-        searchId: 0,
         detail: {
           intro: '',
-          adoptnotice: ''
+          orderNotice: ''
         }
       },
 
@@ -172,39 +172,96 @@ export default {
     }
   },
   methods: {
-    //fastdfs图片上传成功
+    //上架
+    onsale() {
+      //把数组对象映射成id数组
+      let ids = this.sels.map(item => item.id);
+      //获取选中的行
+      if (!this.sels || this.sels.length < 1) {
+        this.$message({message: '老铁，你不选中数据，臣妾上架不了啊....', type: 'error'});
+        return;
+      }
+      this.$confirm('确认上架选中记录吗？', '提示', { type: 'warning'}).then(() => {
+        //开启忙等框
+        this.listLoading = true;
+        //发起请求
+        this.$http.post('/pet/onsale', ids).then((res) => {
+          this.listLoading = false;
+
+          if (res.data.code === 200) {
+            this.$message({
+              message: '上架成功',
+              type: 'success'
+            });
+          } else {
+            this.$message({
+              message: res.data.msg,
+              type: 'error'
+            });
+          }
+          //无论成功还是失败,都刷新列表
+          this.getPets();
+        });
+      }).catch(() => {
+
+      });
+    },
+
+    //下架
+    offsale() {
+      let ids = this.sels.map(item => item.id);
+      //获取选中的行
+      if (!this.sels || this.sels.length < 1) {
+        this.$message({message: '老铁，你不选中数据，臣妾下架不了啊....', type: 'error'});
+        return;
+      }
+      this.$confirm('确认下架选中记录吗？', '提示', { type: 'warning'}).then(() => {
+        this.listLoading = true;
+
+        this.$http.post('/pet/offsale', ids).then((res) => {
+          this.listLoading = false;
+
+          if (res.data.code===200) {
+            this.$message({
+              message: '下架成功',
+              type: 'success'
+            });
+          } else {
+            this.$message({
+              message: res.data.msg,
+              type: 'error'
+            });
+          }
+          this.getPets();
+        });
+      }).catch(() => {
+
+      });
+    },
     handleSuccess(response, file, fileList) {
-      if (response.code === 200) {
-        //resultObj 文件的服务器地址，放到数据库中
-        //根据双向绑定 logo 就有值 1,2,3
-        let resourcesTmp = '';
-        if (fileList != null && fileList.length > 0) {
-          for (var i = 0; i < fileList.length; i++) {
-            if (i == 0) {
-              resourcesTmp = resourcesTmp + fileList[i].response.msg;
-            } else {
-              resourcesTmp = resourcesTmp + "," + fileList[i].response.msg;
-            }
+      console.log("===========")
+      console.log(fileList);
+      //resultObj 文件的服务器地址，放到数据库中
+      //根据双向绑定 logo 就有值 1,2,3
+      let resourcesTmp = '';
+      if (fileList != null && fileList.length > 0) {
+        for (var i = 0; i < fileList.length; i++) {
+          if (i == 0) {
+            resourcesTmp = resourcesTmp + fileList[i].response.resultObj;
+          } else {
+            resourcesTmp = resourcesTmp + "," + fileList[i].response.resultObj;
           }
         }
-        this.editForm.resources = resourcesTmp;
-      }else{
-
       }
-
+      this.editForm.resources = resourcesTmp;
       console.log(this.editForm.resources)
     },
-    //fastdfs中移除图片
     handleRemove(file, fileList) {
-      if (file.response.code !== 200) {
-        alert(file.response.msg)
-        return
-      }
-      var filePath = file.response.msg;
+      var filePath = file.response.resultObj;
       console.log(fileList)
-      this.$http.delete("/fastDfs/del?path=" + filePath)
+      this.$http.delete("/common/fastDfs/?path=" + filePath)
           .then(res => {
-            if (res.data.code === 200) {
+            if (res.data.success) {
               this.$message({
                 message: '删除成功!',
                 type: 'success'
@@ -222,38 +279,36 @@ export default {
       if (fileList != null && fileList.length > 0) {
         for (var i = 0; i < fileList.length; i++) {
           if (i == 0) {
-            resourcesTmp = resourcesTmp + fileList[i].response.msg;
+            resourcesTmp = resourcesTmp + fileList[i].response.resultObj;
           } else {
-            resourcesTmp = resourcesTmp + "," + fileList[i].response.msg;
+            resourcesTmp = resourcesTmp + "," + fileList[i].response.resultObj;
           }
         }
       }
       this.editForm.resources = resourcesTmp;
+      console.log(this.editForm.resources);
     },
     handleCurrentChange(val) {
       this.page = val;
-      this.getSearchMasterMsgs();
+      this.getPets();
     },
 
     //获取用户列表
-    getSearchMasterMsgs() {
+    getPets() {
       let para = {
         currentPage: this.page,
-        keyword: this.searchForm.keyword
+        keyword: this.searchForm.name
       };
       //打开加载的效果
       this.listLoading = true;
       //发起请求
-      this.$http.post("/searchMasterMsg/pending", para).then(res => {
-        this.searchMasterMsgs = res.data.data.list;
+      this.$http.post("/pet/list", para).then(res => {
+        this.pets = res.data.data.list;
         this.total = res.data.data.total;
         //关闭加载的效果
         this.listLoading = false;
-        console.log(res)
       });
-
     },
-
     //删除
     handleDel: function (index, row) {
       this.$confirm('确认删除该记录吗?', '提示', {
@@ -264,7 +319,7 @@ export default {
         //NProgress.start();
         console.debug(row)
         //后台地址的请求
-        this.$http.delete("/searchMasterMsg/" + row.id).then((res) => {
+        this.$http.delete("/pet/" + row.id).then((res) => {
           this.listLoading = false;
           console.debug(res);
           if (res.data.success) {
@@ -274,7 +329,7 @@ export default {
             });
           }
 
-          this.getSearchMasterMsgs();
+          this.getPets();
         });
       }).catch(() => {
 
@@ -290,7 +345,7 @@ export default {
       this.editForm = Object.assign({}, row);
 
       //会显示详情
-      this.$http.get("/searchMasterMsg/detail/" + row.id)
+      this.$http.get("/pet/detail/" + row.id)
           .then(result => {
             this.editForm.detail = result.data;
           });
@@ -305,63 +360,36 @@ export default {
       }
     },
     //显示新增界面
-    handle: function () {
-      if (this.sels == null || this.sels.length < 1) {
-        this.$message({
-          message: '请选中后再操作！',
-          type: 'error'
-        });
-        return;
-      }
-      if (this.sels.length > 1) {
-        this.$message({
-          message: '请选中一个操作！',
-          type: 'error'
-        });
-        return;
-      }
+    handleAdd: function () {
+      //打开弹出框
       this.editFormVisible = true;
-      //把寻主消息转换为宠物信息
-      var row = this.sels[0];
-      this.editForm.name = row.name
-      this.editForm.costprice = row.price;
-      this.editForm.resources = row.resources;
-      this.editForm.typeId = row.typeId;
-      this.editForm.shopId = row.shopId;
-      this.editForm.searchId = row.id;
-      console.log(this.editForm)
-      //图片回显
-      this.fileList = [];
-      var resources = row.resources;
-      if (resources!=null && resources!==''){
-        var resourcesArr = resources.split(",");
-        for (var i = 0; i < resourcesArr.length; i++) {
-          this.fileList.push({url: "http://115.159.217.249:8888" + resourcesArr[i]})
+      this.title = '新增宠物';
+      //初始化表单字段-利用的双向绑定的特性
+      this.editForm = {
+        name: '',
+        costprice: 0,
+        saleprice: 0,
+        resources: '',
+        detail: {
+          intro: '',
+          orderNotice: ''
         }
-      }
-
+      };
     },
-    //编辑-处理提交的事件
+    //编辑
     editSubmit: function () {
-      console.log(this.editForm)
       //验证当前的表单是否符合验证规则
       this.$refs.editForm.validate((valid) => {
-        if (valid) {
-          //验证
-          if (this.editForm.costprice >= this.editForm.saleprice) {
-            alert("售价不能低于成本价")
-            return;
-          }
 
+        if (valid) {
           this.$confirm('确认提交吗？', '提示', {}).then(() => {
             this.editLoading = true;
             //NProgress.start();
-            console.log(this.editForm)
             //把表单的数据组装为json
             let para = Object.assign({}, this.editForm);
-            console.log(para)
+
             //para.birth = (!para.birth || para.birth == '') ? '' : util.formatDate.format(new Date(para.birth), 'yyyy-MM-dd');
-            this.$http.put('/searchMasterMsg/handle', para).then((res) => {
+            this.$http.put('/pet', para).then((res) => {
               this.editLoading = false;
               //NProgress.done();
               this.$message({
@@ -373,18 +401,19 @@ export default {
               //关闭 加载框
               this.editFormVisible = false;
               //重新刷新页面数据
-              this.getSearchMasterMsgs();
+              this.getPets();
             });
           });
         }
       });
     },
+
+    //选中列表
     selsChange: function (sels) {
       this.sels = sels;
     },
     //批量删除
     batchRemove: function () {
-      //类似于Java中的lambda表达式,将数组进行循环将其中参数进行映射提出来,将对象数组映射成id数组,如:[1,2],如果需要改成字符串那么需要进行join
       var ids = this.sels.map(item => item.id);
       this.$confirm('确认删除选中记录吗？', '提示', {
         type: 'warning'
@@ -392,14 +421,14 @@ export default {
         this.listLoading = true;
         //NProgress.start();
         let para = {ids: ids};
-        this.$http.post('/searchMasterMsg/dels', ids).then((res) => {
+        this.$http.post('/pet/dels', ids).then((res) => {
           this.listLoading = false;
           //NProgress.done();
           this.$message({
             message: '删除成功',
             type: 'success'
           });
-          this.getSearchMasterMsgs();
+          this.getPets();
         });
       }).catch(() => {
 
@@ -408,7 +437,7 @@ export default {
   },
   mounted() {
     //当页面加载完以后。执行的方法
-    this.getSearchMasterMsgs();
+    this.getPets();
   }
 }
 

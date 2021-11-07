@@ -14,6 +14,7 @@ import System from './views/org/system'
 import Shop from './views/org/Shop'
 import SearchMasterMsgPending from './views/pet/SearchMasterMsgPending';
 import SearchMasterMsgProcessed from './views/pet/SearchMasterMsgProcessed';
+import Pet from './views/pet/Pet';
 
 let routes = [
     {
@@ -74,7 +75,7 @@ let routes = [
             {path: '/pending', component: SearchMasterMsgPending, name: '待处理寻主消息'},
             {path: '/processed', component: SearchMasterMsgProcessed, name: '已处理寻主消息'},
             {path: '/petType', component: SearchMasterMsgProcessed, name: '宠物类型'},
-            {path: '/pet', component: SearchMasterMsgProcessed, name: '宠物管理'}
+            {path: '/pet', component: Pet, name: '宠物管理'}
         ]
     },
     {
