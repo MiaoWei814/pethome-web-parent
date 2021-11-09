@@ -466,13 +466,22 @@
             midimgSuffix: "_100x100.jpg",
         },
         methods: {
+            //提交订单
             submitProductOrder() {
                 this.order['petId']=this.pet.id
                 this.$http.post("/orderPet/submitOrder", this.order).then((res => {
                     if (res.data.code===200) {
-                        //document.getElementById("mydiv").innerHTML = res.data.result;
-                        // $("#mydiv").html(res.data.data);
-                        alert("下单成功");
+                        this.getTargetPay(res.data.data)
+                    }else{
+                        alert(res.data.msg)
+                    }
+                }));
+            },
+            //拿到支付单向后台支付业务发起请求
+            getTargetPay(orderNo){
+                this.$http.post("/orderPet/getTargetPay/"+orderNo).then((res => {
+                    if (res.data.code===200) {
+                        document.write(res.data.data)
                     }else{
                         alert(res.data.msg)
                     }
